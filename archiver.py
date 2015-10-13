@@ -5,6 +5,7 @@ import optparse
 import os
 import shutil
 import subprocess
+import sys
 import time
 
 def main():
@@ -33,8 +34,8 @@ def continual_watch(source, dest, first_run):
         subprocess.call(['mkdir','-p',dest])
 
     while True:
-        sleep(10)
         single_iteration(source, dest, first_run)
+        time.sleep(10)
 
 
 def single_iteration(source, dest, first_run):
@@ -52,10 +53,15 @@ def single_iteration(source, dest, first_run):
     for run_number in new_numbers:
         archive_run_folder(source, dest, run_number)
 
+    next_run_number = max(first_run, max(*src_numbers))
+    print 'Waiting for Run{:04d} to finish     \r'.format(next_run_number),
+    sys.stdout.flush()
+
 
 def run_numbers(directory):
     for filename in os.listdir(directory):
-        if (os.path.isdir(filename) and
+        full_filename = os.path.join(directory,filename)
+        if (os.path.isdir(full_filename) and
             filename.startswith('Run')):
             yield int(filename[3:])
 
