@@ -24,6 +24,13 @@ def main():
 
     continual_watch(options.input, options.output, options.first_run)
 
+def md5sum(filename):
+    if filename.endswith('.gz'):
+        res = subprocess.check_output('zcat {} | md5sum -'.format(filename), shell=True)
+    else:
+        res = subprocess.check_output(['md5sum',filename])
+
+    return res.split()[0]
 
 def continual_watch(source, dest, first_run):
     if os.path.exists(dest) and not os.path.isdir(dest):
@@ -84,7 +91,7 @@ def archive_run_folder(source, dest, run_number):
     if not os.path.isdir(run_dest):
         os.mkdir(run_dest)
 
-    src_files = os.listdir(run_source)
+    src_files = sorted(os.listdir(run_source))
 
     for filename in src_files:
         handle_single_file(run_source, run_dest, filename)
@@ -94,8 +101,7 @@ def archive_run_folder(source, dest, run_number):
     #Allow read on all archived files
     subprocess.call('chmod 444 `find ' + run_dest + ' -type f`', shell=True)
 
-
-def handle_single_file(source, dest, filename):
+def handle_single_file(source_folder, dest_folder, filename):
     dest_files = os.listdir(dest)
     if filename in dest_files:
         print '{} already exists in {}'.format(filename, dest)
@@ -104,28 +110,40 @@ def handle_single_file(source, dest, filename):
             print 'Skipping {}'.format(filename)
             return
 
-    if filename in ['Global.dat','GlobalRaw.dat']:
-        zip_copy(source, dest, filename)
-    elif os.path.isdir(filename):
-        directory_copy(source, dest, filename)
-    else:
-        regular_copy(source, dest, filename)
-
-def zip_copy(source_folder, dest_folder, filename):
     source_filename = os.path.join(source_folder,filename)
-    dest_filename = os.path.join(dest_folder,filename) + '.gz'
+    dest_filename = os.path.join(dest_folder,filename)
+    md5file = os.path.join(dest_folder,'md5_checksums.txt')
+
+    for i in range(3):
+        print 'Copying {} to {}'.format(source_filename, dest_filename)
+        if filename in ['Global.dat','GlobalRaw.dat']:
+            dest_filename += '.gz'
+            zip_copy(source_filename, dest_filename)
+        else:
+            shutil.copy(source_filename, dest_filename)
+
+        source_md5sum = md5sum(source_filename)
+        dest_md5sum = md5sum(dest_filename)
+
+        if source_md5sum == dest_md5sum:
+            with open(md5file,'a') as f:
+                f.write(filename + '\t' + source_md5sum + '\n')
+            break
+
+        print 'md5sum mismatch transferring {}'.format(source_filename)
+        print 'Retrying'
+    else:
+        print '------------------------------------------------------'
+        print 'Could not copy {}'.format(source_filename)
+        print 'Waiting for human interaction to figure out what went wrong'
+        print '------------------------------------------------------'
+        raw_input()
+
+
+
+def zip_copy(source_filename, dest_filename):
     subprocess.call('gzip < {} > {}'.format(source_filename, dest_filename),
                     shell=True)
-
-
-def regular_copy(source_folder, dest_folder, filename):
-    source_filename = os.path.join(source_folder,filename)
-    shutil.copy(source_filename, dest_folder)
-
-
-def directory_copy(source_folder, dest_folder, filename):
-    source_filename = os.path.join(source_folder,filename)
-    shutil.copytree(source_filename, dest_folder)
 
 
 if __name__=='__main__':
