@@ -105,9 +105,9 @@ def archive_run_folder(source, dest, run_number):
     subprocess.call('chmod 444 `find ' + run_dest + ' -type f`', shell=True)
 
 def handle_single_file(source_folder, dest_folder, filename):
-    dest_files = os.listdir(dest)
+    dest_files = os.listdir(dest_folder)
     if filename in dest_files:
-        print '{} already exists in {}'.format(filename, dest)
+        print '{} already exists in {}'.format(filename, dest_folder)
         resp = raw_input('  Do you want to overwrite? y/[n]')
         if not resp.startswith('y'):
             print 'Skipping {}'.format(filename)
@@ -117,10 +117,12 @@ def handle_single_file(source_folder, dest_folder, filename):
     dest_filename = os.path.join(dest_folder,filename)
     md5file = os.path.join(dest_folder,'md5_checksums.txt')
 
+    if filename in ['Global.dat','GlobalRaw.dat']:
+        dest_filename += '.gz'
+
     for i in range(3):
         print 'Copying {} to {}'.format(source_filename, dest_filename)
-        if filename in ['Global.dat','GlobalRaw.dat']:
-            dest_filename += '.gz'
+        if dest_filename.endswith('.gz'):
             zip_copy(source_filename, dest_filename)
         else:
             shutil.copy(source_filename, dest_filename)
@@ -145,10 +147,10 @@ def handle_single_file(source_folder, dest_folder, filename):
 
 
 def zip_copy(source_filename, dest_filename):
-    subprocess.call('{pv} {input} | gzip > {output}'.format(pv=pv,
-                                                            input=source_filename,
-                                                            output=dest_filename),
-                    shell=True)
+    command = '{pv} {input} | gzip > {output}'.format(pv=pv,
+                                                      input=source_filename,
+                                                      output=dest_filename)
+    subprocess.call(command, shell=True)
 
 
 if __name__=='__main__':
