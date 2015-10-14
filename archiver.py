@@ -8,6 +8,9 @@ import subprocess
 import sys
 import time
 
+pv = os.path.join(os.path.dirname(__file__),
+                  'pv')
+
 def main():
     parser = optparse.OptionParser()
     parser.add_option('-i','--input', dest='input',
@@ -142,7 +145,9 @@ def handle_single_file(source_folder, dest_folder, filename):
 
 
 def zip_copy(source_filename, dest_filename):
-    subprocess.call('gzip < {} > {}'.format(source_filename, dest_filename),
+    subprocess.call('{pv} {input} | gzip > {output}'.format(pv=pv,
+                                                            input=source_filename,
+                                                            output=dest_filename),
                     shell=True)
 
 
