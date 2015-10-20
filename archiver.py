@@ -11,6 +11,10 @@ import time
 pv = os.path.join(os.path.dirname(__file__),
                   'pv')
 
+def print_and_log(string):
+    logfile.write(string+'\n')
+    print string
+
 def main():
     parser = optparse.OptionParser()
     parser.add_option('-i','--input', dest='input',
@@ -19,25 +23,42 @@ def main():
                       help='Output directory.  This directory will be created if it does not exist.')
     parser.add_option('-m','--first-run-number', dest='first_run', type='int',
                       help='The first run number to use.', default=-1)
+    parser.add_option('-l','--log-file', dest='log_file', type='str',
+                      help='The output log file.  If not set, defaults to output_dir/Log.txt', default='')
     options,args = parser.parse_args()
 
     if not options.input or not options.output:
         parser.print_help()
         return
 
+    global logfile
+    if options.log_file:
+        logfile = open(options.log_file,'a')
+    else:
+        logfile = open(os.path.join(options.output, 'Log.txt'),'a')
+
     continual_watch(options.input, options.output, options.first_run)
 
 def md5sum(filename):
-    if filename.endswith('.gz'):
-        res = subprocess.check_output('zcat {} | md5sum -'.format(filename), shell=True)
+    print_and_log('Computing md5sum of {}'.format(filename))
+    large_file = os.stat(filename).st_size > 1024*1024
+    is_zipped = filename.endswith('.gz')
+
+    if is_zipped:
+        command = '{pv} {file} | zcat | md5sum -'
+    elif large_file:
+        command = '{pv} {file} | md5sum -'
     else:
-        res = subprocess.check_output(['md5sum',filename])
+        command = 'md5sum {file}'
+
+    res = subprocess.check_output(command.format(pv=pv, file=filename),
+                                  shell=True)
 
     return res.split()[0]
 
 def continual_watch(source, dest, first_run):
     if os.path.exists(dest) and not os.path.isdir(dest):
-        print '{} exists and is not a directory'.format(dest)
+        print_and_log('{} exists and is not a directory'.format(dest))
         return
 
     if not os.path.isdir(dest):
@@ -85,10 +106,10 @@ def archive_run_folder(source, dest, run_number):
     run_source = os.path.join(source, 'Run{:04d}'.format(run_number))
     run_dest = os.path.join(dest, 'Run{:04d}'.format(run_number))
 
-    print 'Archiving {} into {}'.format(run_source, run_dest)
+    print_and_log('Archiving {} into {}'.format(run_source, run_dest))
 
     if not os.path.isdir(run_source):
-        print 'Directory {} does not exist.  Skipping'.format(run_source)
+        print_and_log('Directory {} does not exist.  Skipping'.format(run_source))
         return
 
     if not os.path.isdir(run_dest):
@@ -107,10 +128,10 @@ def archive_run_folder(source, dest, run_number):
 def handle_single_file(source_folder, dest_folder, filename):
     dest_files = os.listdir(dest_folder)
     if filename in dest_files:
-        print '{} already exists in {}'.format(filename, dest_folder)
+        print_and_log('{} already exists in {}'.format(filename, dest_folder))
         resp = raw_input('  Do you want to overwrite? y/[n]')
         if not resp.startswith('y'):
-            print 'Skipping {}'.format(filename)
+            print_and_log('Skipping {}'.format(filename))
             return
 
     source_filename = os.path.join(source_folder,filename)
@@ -121,7 +142,7 @@ def handle_single_file(source_folder, dest_folder, filename):
         dest_filename += '.gz'
 
     for i in range(3):
-        print 'Copying {} to {}'.format(source_filename, dest_filename)
+        print_and_log('Copying {} to {}'.format(source_filename, dest_filename))
         if dest_filename.endswith('.gz'):
             zip_copy(source_filename, dest_filename)
         else:
@@ -135,13 +156,13 @@ def handle_single_file(source_folder, dest_folder, filename):
                 f.write(filename + '\t' + source_md5sum + '\n')
             break
 
-        print 'md5sum mismatch transferring {}'.format(source_filename)
-        print 'Retrying'
+        print_and_log('md5sum mismatch transferring {}'.format(source_filename))
+        print_and_log('Retrying')
     else:
-        print '------------------------------------------------------'
-        print 'Could not copy {}'.format(source_filename)
-        print 'Waiting for human interaction to figure out what went wrong'
-        print '------------------------------------------------------'
+        print_and_log('------------------------------------------------------')
+        print_and_log('Could not copy {}'.format(source_filename))
+        print_and_log('Waiting for human interaction to figure out what went wrong')
+        print_and_log('------------------------------------------------------')
         raw_input()
 
 
