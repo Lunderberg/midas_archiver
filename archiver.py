@@ -127,13 +127,14 @@ def handle_single_file(source_folder, dest_folder, filename):
         else:
             shutil.copy(source_filename, dest_filename)
 
-        source_md5sum = md5sum(source_filename)
-        dest_md5sum = md5sum(dest_filename)
+        # source_md5sum = md5sum(source_filename)
+        # dest_md5sum = md5sum(dest_filename)
 
-        if source_md5sum == dest_md5sum:
-            with open(md5file,'a') as f:
-                f.write(filename + '\t' + source_md5sum + '\n')
-            break
+        # if source_md5sum == dest_md5sum:
+        #     with open(md5file,'a') as f:
+        #         f.write(filename + '\t' + source_md5sum + '\n')
+        #     break
+        break
 
         print 'md5sum mismatch transferring {}'.format(source_filename)
         print 'Retrying'
