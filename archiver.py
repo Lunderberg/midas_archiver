@@ -31,6 +31,16 @@ def main():
         parser.print_help()
         return
 
+    # Don't clobber a file if a file is there
+    if os.path.exists(options.output) and not os.path.isdir(options.output):
+        print_and_log('{} exists and is not a directory'.format(options.output))
+        return
+
+    # Make the directory if it doesn't already exist
+    if not os.path.isdir(options.output):
+        subprocess.call(['mkdir','-p',options.output])
+
+    # Open the logfile
     global logfile
     if options.log_file:
         logfile = open(options.log_file,'a')
@@ -57,13 +67,6 @@ def md5sum(filename):
     return res.split()[0]
 
 def continual_watch(source, dest, first_run):
-    if os.path.exists(dest) and not os.path.isdir(dest):
-        print_and_log('{} exists and is not a directory'.format(dest))
-        return
-
-    if not os.path.isdir(dest):
-        subprocess.call(['mkdir','-p',dest])
-
     while True:
         single_iteration(source, dest, first_run)
         time.sleep(10)
