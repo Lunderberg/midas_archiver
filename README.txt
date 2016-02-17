@@ -35,11 +35,11 @@ Setting up a usb drive
   b. mkpart primary ext3 0 100%
   c. q
 
-5. Run 'sudo mkfs -t ext3 /dev/sdb1'.
+6. Run 'sudo mkfs -t ext3 /dev/sdb1'.
 
-6. Run 'sudo mount /dev/sdb1 /mnt/usb'.
+7. Run 'sudo mount /dev/sdb1 /mnt/usb'.
 
-7. Run 'sudo chown gretina /mnt/usb'.
+8. Run 'sudo chown gretina /mnt/usb'.
 
 
 Running the archiver
