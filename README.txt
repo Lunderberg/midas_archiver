@@ -16,7 +16,7 @@ Setting up a usb drive
    the correct device id.  It should disappear when the disk is
    unplugged.
 
-4. Use `sudo fdisk /dev/sdb` to format the disk.
+4. If the drive is 2 TB or smaller, use `sudo fdisk /dev/sdb` to format the disk.
 
    a. 'p', print the existing file table.
    b. 'd', delete the existing partition.
@@ -26,6 +26,14 @@ Setting up a usb drive
    d. 't'
       When prompted, use '83', for a ext3 partition.
    e. 'w', write the partition table.
+   
+5. If the drive is larger than 2 TB, use `sudo parted /dev/sdb` to format the disk.
+   (If you want to align the partition, use the guide at
+    http://rainbow.chard.org/2013/01/30/how-to-align-partitions-for-best-performance-using-parted/)
+
+  a. mklabel gpt
+  b. mkpart primary ext3 0 100%
+  c. q
 
 5. Run 'sudo mkfs -t ext3 /dev/sdb1'.
 
