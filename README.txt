@@ -39,7 +39,7 @@ Setting up a usb drive
 
 7. Run 'sudo mount /dev/sdb1 /mnt/usb'.
 
-8. Run 'sudo chown gretina /mnt/usb'.
+8. Run 'sudo chown tigress /mnt/usb'.
 
 
 Running the archiver
@@ -49,13 +49,9 @@ The archiver can be started with a single command.
 
    ~/archiver/archiver.py -i /path/to/data -o /mnt/usb
 
-The input path should contain the various Run0000 folders.
-The output path should point to the desired archive folder.
+The input path should contain the various *.mid files.
+The output path should point to the archive folder,
+  to which the *.mid files will be copied.
 
 The script will run continually, archiving each run as it is
-completed.  After each file is transferred, the script will compute an
-md5 checksum to ensure that there were no errors in the transfer.
-
-If the disk runs out of space, and you need to switch to a new disk,
-use the optional argument '-m NUMBER'.  The script will then archive
-only runs starting with the given number.
+completed.
